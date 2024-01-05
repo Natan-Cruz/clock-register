@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use build_html::{self, Html, HtmlContainer, ContainerType, Table, Container};
 use chrono::{NaiveDate, Days};
 use clap::{Subcommand, Parser};
@@ -26,6 +28,19 @@ enum Commands {
     Status
 }
 
+struct s<'a> {
+    pub routes: HashMap<&'a str, Box<dyn FnMut() + 'a>>
+}
+
+impl<'a> s<'a> {
+    pub fn new() -> Self {
+        Self {
+            routes: HashMap::new()
+        }
+    }
+}
+
+
 
 fn main() {
     let database: db::Database = db::Database::connect();
@@ -44,11 +59,12 @@ fn main() {
         Some(Commands::GenerateReport) => {
             generate_report();
         },
-        Some(Commands::Status) => {}
+        Some(Commands::Status) => {
+            show_status()
+        }
         None => {}
     }
 }
-
 
 
 fn start(){
@@ -197,4 +213,20 @@ fn teste(rows: LinkedHashMap<String, Vec<&Register>>) -> HtmlTable {
         body, 
         header
     };
+}
+
+
+fn show_status(){ 
+    let database = db::Database::connect();
+
+    let register_db = db::RegisterDB::new(&database.connection);
+
+    let register = register_db.get_last_register();
+    let registers = register_db.get_current_month_registers();
+
+    println!("{}", registers.len());
+
+    println!("Status: {}", register.state);
+    println!("Data: {}", register.date.format("%d/%m/%Y"));
+    println!("Hora: {}", register.time.format("%H:%M:%S"));
 }
