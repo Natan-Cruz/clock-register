@@ -3,10 +3,14 @@ use std::collections::HashMap;
 use build_html::{self, Html, HtmlContainer, ContainerType, Table, Container};
 use chrono::{NaiveDate, Days};
 use clap::{Subcommand, Parser};
-use libs::{register::Register, http};
+use libs::{register::Register};
 mod libs;
 use crate::libs::{db, register};
 use linked_hash_map::LinkedHashMap;
+
+
+mod http;
+use http::http as h;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -40,10 +44,8 @@ impl<'a> s<'a> {
     }
 }
 
-
-
 fn main() {
-    let database: db::Database = db::Database::connect();
+    let database = db::Database::connect();
 
     database.create_database();
     
@@ -97,11 +99,11 @@ fn stop(){
 }
 
 fn generate_report(){
-    let mut server = http::Server::new();
+    let mut server = h::HttpServer::new();
 
-    server.get("/", || {
-        return Ok(generate());
-    });
+    server.get("/", Box::new(|| {
+        generate();
+    }));
 
     server.bind("127.0.0.1:8080");
 }
@@ -222,9 +224,7 @@ fn show_status(){
     let register_db = db::RegisterDB::new(&database.connection);
 
     let register = register_db.get_last_register();
-    let registers = register_db.get_current_month_registers();
-
-    println!("{}", registers.len());
+    // let registers = register_db.get_current_month_registers();
 
     println!("Status: {}", register.state);
     println!("Data: {}", register.date.format("%d/%m/%Y"));

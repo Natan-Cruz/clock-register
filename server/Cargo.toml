@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 url = { version = "2.5.0", features = ["serde"] }
+regex = "1.5"
