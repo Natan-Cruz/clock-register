@@ -11,10 +11,14 @@ enum HttpVerbs {
     DELETE
 }
 
+pub struct hResult {
+    pub body: String
+}
+
 pub struct Route {
     regex_path: String,
     path: String,
-    callback: Box<dyn FnMut() + 'static>
+    callback: Box<dyn FnMut()  + 'static>
 }
 
 pub struct HttpServer {
@@ -145,7 +149,6 @@ pub mod tests {
             },
             None => {}
         }
-       
     }
 
 

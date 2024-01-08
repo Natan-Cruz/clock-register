@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use regex::Regex;
 use url::Url;
 
+mod http_result;
+
+
 
 #[derive(PartialEq, Debug)]
 enum HttpVerbs {
@@ -11,10 +14,37 @@ enum HttpVerbs {
     DELETE
 }
 
+
+pub struct HttpResult {
+    status: usize,
+    body: String,
+}
+
+impl HttpResult {
+    pub fn new() -> Self {
+        Self {
+            body: String::new(),
+            status: 0
+        }
+    }
+
+    pub fn status(){
+
+    }
+
+    pub fn body(){
+
+    }
+
+    pub fn headers(){
+
+    }
+}
+
 pub struct Route {
     regex_path: String,
     path: String,
-    callback: Box<dyn FnMut() + 'static>
+    callback: Box<dyn FnMut() -> HttpResult + 'static>
 }
 
 pub struct HttpServer {
@@ -28,7 +58,6 @@ pub struct Request {
 }
 
 
-
 impl HttpServer {
     pub fn new() -> Self {
         Self {
@@ -36,7 +65,7 @@ impl HttpServer {
         }
     }
 
-    pub fn get(&mut self, path: &str, callback: Box<dyn FnMut()>) {
+    pub fn get(&mut self, path: &str, callback: Box<dyn FnMut() -> HttpResult>) {
         let match_url_param_pattern = r":(\w+)";
 
         let match_url_param_regex = Regex::new(match_url_param_pattern).unwrap();
@@ -95,10 +124,10 @@ impl HttpServer {
                 if  url_part.starts_with(":") {
 
                     if let Some(value) = captures.get(_index) {
-                        println!("VALUE: {}", &value.as_str());
                         let param_key = &url_part.replace(":", "");
+                        let param_value = value.as_str();
 
-                        params.insert(String::from(param_key), String::from(value.as_str()));
+                        params.insert(String::from(param_key), String::from(param_value));
                     }
 
                     _index += 1;
@@ -114,6 +143,7 @@ impl HttpServer {
             query
         }
     }
+
 }
 
 #[cfg(test)]
@@ -124,7 +154,7 @@ pub mod tests {
     fn it_parse_params_request(){
         let mut request = HttpServer::new();
 
-        request.get("/users/:userId/books/:bookId", Box::new(||{}));
+        request.get("/users/:userId/books/:bookId", Box::new(||{ crate::HttpResult::new() }));
 
         let resouce = "GET /users/10/books/123 HTTP/1.1";
 
@@ -152,7 +182,7 @@ pub mod tests {
     fn it_parse_query_request(){
         let mut request = HttpServer::new();
 
-        request.get("/users", Box::new(||{}));
+        request.get("/users", Box::new(||{ crate::HttpResult::new() }));
 
         let resouce = "GET /users?type=hatch&color=red HTTP/1.1";
 

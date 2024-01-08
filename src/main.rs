@@ -3,14 +3,10 @@ use std::collections::HashMap;
 use build_html::{self, Html, HtmlContainer, ContainerType, Table, Container};
 use chrono::{NaiveDate, Days};
 use clap::{Subcommand, Parser};
-use libs::{register::Register};
+use libs::{register::Register, http};
 mod libs;
 use crate::libs::{db, register};
 use linked_hash_map::LinkedHashMap;
-
-
-mod http;
-use http::http as h;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -99,11 +95,11 @@ fn stop(){
 }
 
 fn generate_report(){
-    let mut server = h::HttpServer::new();
+    let mut server = http::Server::new();
 
-    server.get("/", Box::new(|| {
-        generate();
-    }));
+    server.get("/", || {
+        return Ok(generate());
+    });
 
     server.bind("127.0.0.1:8080");
 }
