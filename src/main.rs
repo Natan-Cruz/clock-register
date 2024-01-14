@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-
+use linked_hash_map::LinkedHashMap;
 use build_html::{self, Html, HtmlContainer, ContainerType, Table, Container};
 use chrono::{NaiveDate, Days};
 use clap::{Subcommand, Parser};
-use libs::{register::Register, http};
+
+
 mod libs;
-use crate::libs::{db, register};
-use linked_hash_map::LinkedHashMap;
+use libs::{database as db, register::{self, Register}, report::report::get_total_hours_worked_on_day_formatted};
+
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -26,18 +26,6 @@ enum Commands {
     GenerateReport,
     /// Mostra status atual
     Status
-}
-
-struct s<'a> {
-    pub routes: HashMap<&'a str, Box<dyn FnMut() + 'a>>
-}
-
-impl<'a> s<'a> {
-    pub fn new() -> Self {
-        Self {
-            routes: HashMap::new()
-        }
-    }
 }
 
 fn main() {
@@ -95,11 +83,13 @@ fn stop(){
 }
 
 fn generate_report(){
-    let mut server = http::Server::new();
+    let mut server = server::HttpServer::new();
 
-    server.get("/", || {
-        return Ok(generate());
-    });
+    server.get("/", Box::new(|_| {
+        let mut response = server::HttpResponse::new();
+        response.set_body(generate());
+        response
+    }));
 
     server.bind("127.0.0.1:8080");
 }
@@ -184,7 +174,7 @@ fn teste(rows: LinkedHashMap<String, Vec<&Register>>) -> HtmlTable {
 
     header.push(first_column_header);
 
-    for index in 0..max_qtd{
+    for index in 0..max_qtd {
         if index % 2 == 0 {
             header.push(String::from("Entrada"));
         } else {
@@ -197,12 +187,22 @@ fn teste(rows: LinkedHashMap<String, Vec<&Register>>) -> HtmlTable {
     for (date, registers) in &rows {
         let mut row: Vec<String> = vec![];
 
-
         row.push(date.to_string());
 
-        for register in registers {
-            row.push(register.time.format("%H:%M:%S").to_string())
+        for column_index in 0..max_qtd {
+            let register = registers.get(column_index);
+
+            match register {
+                Some(register) => {
+                    row.push(register.time.format("%H:%M:%S").to_string())
+                },
+                None => {
+                    row.push("-".to_string())
+                }
+            }
         }
+
+        row.push(get_total_hours_worked_on_day_formatted(registers));
 
         body.push(row);
     }
