@@ -102,6 +102,8 @@ fn generate () -> String {
     let result = get_registers_grouped_by_date(&rows);
     let table = teste(result);
 
+    let total = get_total_hours_worked_on_day_formatted(&rows.iter().map(|r| r).collect());
+
     let mut page = build_html::HtmlPage::new()
         .with_title("Relatório de horas trabalhadas")
         .with_header(1, "Relatório de horas trabalhadas")
@@ -111,7 +113,10 @@ fn generate () -> String {
                     Table::from(table.body)
                     .with_header_row(table.header)
             )
-
+        )
+        .with_container(
+            Container::new(ContainerType::Div)
+                .with_header(2, format!("Total trabalhado este mês: {}", total))
         );
 
     page.add_style(include_str!("style.css"));

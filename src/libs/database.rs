@@ -53,7 +53,6 @@ impl<'a> RegisterDB<'a> {
     }
 
     pub fn save(&self, register: Register){
-
         let query = format!(
             "INSERT INTO registers VALUES ('{}', '{}', '{}', '{}')", 
             register.id, 

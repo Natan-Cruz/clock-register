@@ -1,5 +1,4 @@
-use std::fmt::{Display, write};
-
+use std::fmt::Display;
 use uuid::Uuid;
 use chrono::prelude::*;
 
